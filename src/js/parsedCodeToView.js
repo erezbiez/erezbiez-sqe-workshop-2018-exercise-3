@@ -1,36 +1,20 @@
-// eslint-disable-next-line max-lines-per-function,complexity
-function parsedCodeToView(exp) {
+function parsedCodeToView(exp){
     switch (exp.type) {
-    case 'AssignmentExpression':
-        return assignmentExpressionToView(exp);
-    case 'BinaryExpression':
-        return binaryExpressionToView(exp);
-    case 'BlockStatement':
-        return bodyToView(exp.body);
-    case 'ExpressionStatement':
-        return parsedCodeToView(exp.expression);
-    case 'FunctionDeclaration':
-        return functionDeclarationToView(exp);
-    case 'Identifier':
-        return exp.name;
-    case 'IfStatement':
-        return ifStatementToView(exp, false);
-    case 'Literal':
-        return exp.raw;
-    case 'MemberExpression':
-        return parsedCodeToView(exp.object) + '[' + parsedCodeToView(exp.property) + ']';
-    case 'Program':
-        return bodyToView(exp.body);
-    case 'UnaryExpression':
-        return unaryExpressionToView(exp);
-    case 'VariableDeclaration':
-        return variableDeclarationToView(exp);
-    case 'WhileStatement':
-        return whileStatementToView(exp);
-    case 'ReturnStatement':
-        return returnStatementToView(exp);
-    default:
-        return 'Not Supported';
+    case 'AssignmentExpression': return assignmentExpressionToView(exp);
+    case 'BinaryExpression': return binaryExpressionToView(exp);
+    case 'BlockStatement': return bodyToView(exp.body);
+    case 'ExpressionStatement': return parsedCodeToView(exp.expression);
+    case 'FunctionDeclaration': return functionDeclarationToView(exp);
+    case 'Identifier': return exp.name;
+    case 'IfStatement': return ifStatementToView(exp, false);
+    case 'Literal': return exp.raw;
+    case 'MemberExpression': return parsedCodeToView(exp.object) + '[' + parsedCodeToView(exp.property) + ']';
+    case 'Program': return bodyToView(exp.body);
+    case 'UnaryExpression': return unaryExpressionToView(exp);
+    case 'VariableDeclaration': return variableDeclarationToView(exp);
+    case 'WhileStatement': return whileStatementToView(exp);
+    case 'ReturnStatement': return returnStatementToView(exp);
+    default: return 'Not Supported';
     }
 }
 
