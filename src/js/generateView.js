@@ -145,7 +145,6 @@ function generateTable(parsedCode) {
     let rowsList = [];
     pushToTable(rowsList, 'Line', 'Type', 'Name', 'Condition', 'Value');
     parsedCodeToTable(parsedCode, rowsList);
-    console.log(rowsList);
     return rowsList.reduce((str, row) => str + generateRow(row), '');
 }
 
