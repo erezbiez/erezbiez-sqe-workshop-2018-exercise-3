@@ -15,10 +15,12 @@ const atomicHandlers = {
     'BinaryExpression': binaryExpression,
     'Identifier': identifier,
     'Literal': literal,
+    'LogicalExpression': binaryExpression,
     'MemberExpression': memberExpression,
     'UnaryExpression': unaryExpression,
     'UpdateExpression': updateExpression,
-    'VariableDeclaration': variableDeclarationWithResult
+    'VariableDeclaration': variableDeclarationWithResult,
+    'AssignmentExpression': assignmentExpressionWithResult
 };
 
 function parsedCodeToTable(exp, rowsList) {
@@ -26,12 +28,27 @@ function parsedCodeToTable(exp, rowsList) {
         handlers[exp.type](exp, rowsList);
 }
 
+function assignmentExpressionWithResult(exp){
+    return atomicHandlers[exp.left.type](exp.left)+' = '+atomicHandlers[exp.right.type](exp.right);
+}
+
 function assignmentExpression(exp, rowsList) {
     pushToTable(rowsList, exp.loc.start.line, 'assignment expression', atomicHandlers[exp.left.type](exp.left), '', atomicHandlers[exp.right.type](exp.right));
 }
 
 function binaryExpression(exp) {
-    return atomicHandlers[exp.left.type](exp.left) + exp.operator + atomicHandlers[exp.right.type](exp.right);
+    let op = exp.operator;
+    switch (op) {
+    case '<':
+        op = '&lt'; break;
+    case '>':
+        op = '&gt'; break;
+    case '&':
+        op='&amp'; break;
+    case '&&':
+        op='&amp&amp'; break;
+    }
+    return atomicHandlers[exp.left.type](exp.left) + op + atomicHandlers[exp.right.type](exp.right);
 }
 
 function body(exp, rowsList) {

@@ -21,7 +21,7 @@ describe('The generate view module', () => {
         );
     });
 
-    it('is parsing for statement correctly', () => {
+    it('is parsing for statement with variable declaration as init correctly', () => {
         let rowsList = [];
         parsedCodeToTable(parseCode('for (let i=0; i<10; i++) {}'), rowsList);
         var json = [
@@ -29,7 +29,25 @@ describe('The generate view module', () => {
                 'line': 1,
                 'type': 'for statement',
                 'name': '',
-                'condition': 'i = 0; i<10; i++',
+                'condition': 'i = 0; i&lt10; i++',
+                'value': ''
+            }
+        ];
+        assert.equal(
+            JSON.stringify(rowsList),
+            JSON.stringify(json)
+        );
+    });
+
+    it('is parsing for statement with assignment expression as init correctly', () => {
+        let rowsList = [];
+        parsedCodeToTable(parseCode('for (let i=0; i<10; i++) {}'), rowsList);
+        var json = [
+            {
+                'line': 1,
+                'type': 'for statement',
+                'name': '',
+                'condition': 'i = 0; i&lt10; i++',
                 'value': ''
             }
         ];
@@ -133,7 +151,7 @@ describe('The generate view module', () => {
                 'line': 1,
                 'type': 'if statement',
                 'name': '',
-                'condition': 'i>0',
+                'condition': 'i&gt0',
                 'value': ''
             }
         ];
@@ -151,7 +169,7 @@ describe('The generate view module', () => {
                 'line': 1,
                 'type': 'if statement',
                 'name': '',
-                'condition': 'i>0',
+                'condition': 'i&gt0',
                 'value': ''
             }
         ];
@@ -170,14 +188,14 @@ describe('The generate view module', () => {
                 'line': 1,
                 'type': 'if statement',
                 'name': '',
-                'condition': 'i>0',
+                'condition': 'i&gt0',
                 'value': ''
             },
             {
                 'line': 2,
                 'type': 'else if statement',
                 'name': '',
-                'condition': 'i<-5',
+                'condition': 'i&lt-5',
                 'value': ''
             }
         ];
@@ -197,14 +215,14 @@ describe('The generate view module', () => {
                 'line': 1,
                 'type': 'if statement',
                 'name': '',
-                'condition': 'i>0',
+                'condition': 'i&gt0',
                 'value': ''
             },
             {
                 'line': 2,
                 'type': 'else if statement',
                 'name': '',
-                'condition': 'i<-5',
+                'condition': 'i&lt-5',
                 'value': ''
             }
         ];
@@ -224,7 +242,7 @@ describe('The generate view module', () => {
                 'line': 1,
                 'type': 'while statement',
                 'name': '',
-                'condition': 'i<0',
+                'condition': 'i&lt0',
                 'value': ''
             }
         ];
