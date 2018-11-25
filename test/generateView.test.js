@@ -1,11 +1,11 @@
 import assert from 'assert';
 import {parseCode} from '../src/js/code-analyzer';
-import {parsedCodeToTable} from '../src/js/generateView';
+import {substituteParsedCode} from '../src/js/generateView';
 
 describe('The generate view module', () => {
     it('is parsing assignment expression statement correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('i=0;'), rowsList);
+        substituteParsedCode(parseCode('i=0;'), rowsList);
         var json = [
             {
                 'line': 1,
@@ -23,7 +23,7 @@ describe('The generate view module', () => {
 
     it('is parsing for statement with variable declaration as init correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('for (let i=0; i<10; i++) {}'), rowsList);
+        substituteParsedCode(parseCode('for (let i=0; i<10; i++) {}'), rowsList);
         var json = [
             {
                 'line': 1,
@@ -41,7 +41,7 @@ describe('The generate view module', () => {
 
     it('is parsing for statement with assignment expression as init correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('for (let i=0; i<10; i++) {}'), rowsList);
+        substituteParsedCode(parseCode('for (let i=0; i<10; i++) {}'), rowsList);
         var json = [
             {
                 'line': 1,
@@ -59,7 +59,7 @@ describe('The generate view module', () => {
 
     it('is parsing variable declaration of one variable correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('let i;'), rowsList);
+        substituteParsedCode(parseCode('let i;'), rowsList);
         var json = [
             {
                 'line': 1,
@@ -77,7 +77,7 @@ describe('The generate view module', () => {
 
     it('is parsing variable declaration of one variable with init correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('let i=0;'), rowsList);
+        substituteParsedCode(parseCode('let i=0;'), rowsList);
         var json = [
             {
                 'line': 1,
@@ -95,7 +95,7 @@ describe('The generate view module', () => {
 
     it('is parsing variable declaration of few variables correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('let a,b;'), rowsList);
+        substituteParsedCode(parseCode('let a,b;'), rowsList);
         var json = [
             {
                 'line': 1,
@@ -120,7 +120,7 @@ describe('The generate view module', () => {
 
     it('is parsing variable declaration of few variables with init correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('let a=1, b=2;'), rowsList);
+        substituteParsedCode(parseCode('let a=1, b=2;'), rowsList);
         var json = [
             {
                 'line': 1,
@@ -145,7 +145,7 @@ describe('The generate view module', () => {
 
     it('is parsing if statement with no else correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('if (i>0) {}'), rowsList);
+        substituteParsedCode(parseCode('if (i>0) {}'), rowsList);
         var json = [
             {
                 'line': 1,
@@ -163,7 +163,7 @@ describe('The generate view module', () => {
 
     it('is parsing if statement with else correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('if (i>0) {}\n else {}'), rowsList);
+        substituteParsedCode(parseCode('if (i>0) {}\n else {}'), rowsList);
         var json = [
             {
                 'line': 1,
@@ -181,7 +181,7 @@ describe('The generate view module', () => {
 
     it('is parsing if statement with else if and no else correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('if (i>0) {} \n' +
+        substituteParsedCode(parseCode('if (i>0) {} \n' +
             'else if (i<-5) {}'), rowsList);
         var json = [
             {
@@ -207,7 +207,7 @@ describe('The generate view module', () => {
 
     it('is parsing if statement with else if and else correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('if (i>0) {} \n' +
+        substituteParsedCode(parseCode('if (i>0) {} \n' +
             'else if (i<-5) {}\n' +
             'else {}'), rowsList);
         var json = [
@@ -234,7 +234,7 @@ describe('The generate view module', () => {
 
     it('is parsing while statement correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('while (i<0){\n' +
+        substituteParsedCode(parseCode('while (i<0){\n' +
             'i++;\n' +
             '}\n'), rowsList);
         var json = [
@@ -254,7 +254,7 @@ describe('The generate view module', () => {
 
     it('is parsing function declaration (on args) correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('function foo(){}'), rowsList);
+        substituteParsedCode(parseCode('function foo(){}'), rowsList);
         var json = [
             {
                 'line': 1,
@@ -272,7 +272,7 @@ describe('The generate view module', () => {
 
     it('is parsing function declaration (with args), variable declaration and return statement correctly', () => {
         let rowsList = [];
-        parsedCodeToTable(parseCode('function foo(a){\n' +
+        substituteParsedCode(parseCode('function foo(a){\n' +
             'return a;\n' +
             '}'), rowsList);
         var json = [

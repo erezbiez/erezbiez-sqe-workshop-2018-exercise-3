@@ -1,8 +1,9 @@
+import * as escodegen from 'escodegen';
+
 const handlers = {
     'AssignmentExpression': assignmentExpression,
     'BlockStatement': body,
     'ExpressionStatement': expressionStatement,
-    'ForStatement': forStatement,
     'FunctionDeclaration': functionDeclaration,
     'IfStatement': ifStatement,
     'Program': body,
@@ -17,133 +18,95 @@ const atomicHandlers = {
     'Literal': literal,
     'LogicalExpression': binaryExpression,
     'MemberExpression': memberExpression,
-    'UnaryExpression': unaryExpression,
-    'UpdateExpression': updateExpression,
-    'VariableDeclaration': variableDeclarationWithResult,
-    'AssignmentExpression': assignmentExpressionWithResult
 };
 
-function parsedCodeToTable(exp, rowsList) {
+function substituteParsedCode(exp, env) {
     if (exp.type in handlers)
-        handlers[exp.type](exp, rowsList);
+        handlers[exp.type](exp, env);
 }
 
-function assignmentExpressionWithResult(exp){
-    return atomicHandlers[exp.left.type](exp.left)+' = '+atomicHandlers[exp.right.type](exp.right);
+function assignmentExpression(exp, env) {
+    env[atomicHandlers[exp.left.type](exp.left, env)] = atomicHandlers[exp.right.type](exp.right, env);
 }
 
-function assignmentExpression(exp, rowsList) {
-    pushToTable(rowsList, exp.loc.start.line, 'assignment expression', atomicHandlers[exp.left.type](exp.left), '', atomicHandlers[exp.right.type](exp.right));
-}
-
-function binaryExpression(exp) {
-    let op = exp.operator;
-    switch (op) {
-    case '<':
-        op = '&lt'; break;
-    case '>':
-        op = '&gt'; break;
-    case '&':
-        op='&amp'; break;
-    case '&&':
-        op='&amp&amp'; break;
+function binaryExpression(exp, env) {
+    exp.left = atomicHandlers[exp.left.type](exp.left, env);
+    exp.right = atomicHandlers[exp.right.type](exp.right, env);
+    if (exp.left.type === 'Literal' && exp.left.type === 'Literal'){
+        const value = eval(exp.left.raw+exp.operator+exp.right.raw);
+        exp = {'type': 'Literal', 'value': value, 'raw': ''+value};
     }
-    return atomicHandlers[exp.left.type](exp.left) + op + atomicHandlers[exp.right.type](exp.right);
+    return exp;
 }
 
-function body(exp, rowsList) {
-    exp.body.forEach(e => parsedCodeToTable(e, rowsList));
-}
-
-function expressionStatement(exp, rowsList) {
-    parsedCodeToTable(exp.expression, rowsList);
-}
-
-function forStatement(exp, rowsList) {
-    let condition = atomicHandlers[exp.init.type](exp.init) + '; ' + atomicHandlers[exp.test.type](exp.test) + '; ' + atomicHandlers[exp.update.type](exp.update);
-    pushToTable(rowsList, exp.loc.start.line, 'for statement', '', condition, '');
-}
-
-function param(param, rowsList) {
-    pushToTable(rowsList, param.loc.start.line, 'variable declartion', param.name, '', '');
-}
-
-function functionDeclaration(exp, rowsList) {
-    pushToTable(rowsList, exp.loc.start.line, 'function declaration', atomicHandlers[exp.id.type](exp.id), '', '');
-    exp.params.forEach(p => param(p, rowsList));
-    parsedCodeToTable(exp.body, rowsList);
-}
-
-function identifier(exp) {
-    return exp.name;
-}
-
-function ifStatement(exp, rowsList) {
-    ifStatementHelper(exp, rowsList, true);
-}
-
-function ifStatementHelper(exp, rowsList, firstIf) {
-    if (firstIf)
-        pushToTable(rowsList, exp.loc.start.line, 'if statement', '', atomicHandlers[exp.test.type](exp.test), '');
-    else
-        pushToTable(rowsList, exp.loc.start.line, 'else if statement', '', atomicHandlers[exp.test.type](exp.test), '');
-    parsedCodeToTable(exp.consequent, rowsList);
-    if (exp.alternate !== null) {
-        if (exp.alternate.type !== 'IfStatement')
-            parsedCodeToTable(exp.alternate, rowsList);
-        else
-            ifStatementHelper(exp.alternate, rowsList, false);
+function body(exp, initEnv) {
+    let env = JSON.parse(JSON.stringify(initEnv));
+    let expsToRemove = []
+    for (let i = 0; i < exp.body.length; i++) {
+        substituteParsedCode(exp.body[i], env);
+        if (exp.body[i].type === 'ExpressionStatement' || exp.body[i].type === 'VariableDeclaration')
+            expsToRemove.push(i);
+    }
+    for (let i = 0; i < expsToRemove.length; i++) {
+        exp.body.splice(expsToRemove[i], 1);
     }
 }
 
-function literal(exp) {
-    return exp.raw;
+function expressionStatement(exp, env) {
+    substituteParsedCode(exp.expression, env);
 }
 
-function memberExpression(exp) {
-    return atomicHandlers[exp.object.type](exp.object) + '[' + atomicHandlers[exp.property.type](exp.property) + ']';
+function param(param, env) {
+    env[param] = param;
 }
 
-function returnStatement(exp, rowsList) {
-    pushToTable(rowsList, exp.loc.start.line, 'return statement', '', '', atomicHandlers[exp.argument.type](exp.argument));
+function functionDeclaration(exp, env) {
+    exp.params.forEach(p => param(p, env));
+    substituteParsedCode(exp.body, env);
 }
 
-function unaryExpression(exp) {
-    return exp.operator + atomicHandlers[exp.argument.type](exp.argument);
+function identifier(exp, env) {
+    return env[exp.name];
 }
 
-function updateExpression(exp) {
-    return atomicHandlers[exp.argument.type](exp.argument) + exp.operator;
+function ifStatement(exp, env) {
+    exp.test = atomicHandlers[exp.test.type](exp.test, env);
+    substituteParsedCode(exp.consequent, env);
+    if (exp.alternate !== null)
+        substituteParsedCode(exp.alternate, env);
 }
 
-function variableDeclaration(exp, rowsList, toReturn) {
-    exp.declarations.forEach(d => variableDeclarator(d, rowsList, toReturn));
+// eslint-disable-next-line no-unused-vars
+function literal(exp, env) {
+    return exp;
 }
 
-function variableDeclarationWithResult(exp) {
-    return exp.declarations.reduce((str, d) => str + variableDeclaratorWithResult(d), '');
+function memberExpression(exp, env) {
+    exp.object = atomicHandlers[exp.object.type](exp.object, env);
+    exp.propery = atomicHandlers[exp.property.type](exp.property, env);
+    return exp;
 }
 
-function variableDeclarator(exp, rowsList) {
-    let init = '';
-    if (exp.init !== null)
-        init = atomicHandlers[exp.init.type](exp.init);
-    pushToTable(rowsList, exp.loc.start.line, 'variable declaration', atomicHandlers[exp.id.type](exp.id), '', init);
+function returnStatement(exp, env) {
+    atomicHandlers[exp.argument.type](exp.argument,env);
 }
 
-function variableDeclaratorWithResult(exp) {
-    let init = '';
-    let vd = atomicHandlers[exp.id.type](exp.id);
+function variableDeclaration(exp, env) {
+    for (let i = 0; i < exp.declarations.length; i++)
+        variableDeclarator(exp.declarations[i],env);
+}
+
+function variableDeclarator(exp, env) {
+    let init = exp.id.name;
     if (exp.init !== null) {
-        init = atomicHandlers[exp.init.type](exp.init);
-        vd = vd + ' = ' + init;
+        init = atomicHandlers[exp.init.type](exp.init, env);
     }
-    return vd;
+    env[exp.id.name] = init;
 }
 
-function whileStatement(exp, rowsList) {
-    pushToTable(rowsList, exp.loc.start.line, 'while statement', '', atomicHandlers[exp.test.type](exp.test), '');
-    parsedCodeToTable(exp.body, rowsList);
+function whileStatement(exp, env) {
+    exp.test = atomicHandlers[exp.test.type](exp.test, env);
+    substituteParsedCode(exp.body, env);
 }
 
 function pushToTable(rowsList, line, type, name, condition, value) {
@@ -158,12 +121,11 @@ function generateRow(obj) {
         '<td>\n' + obj.value + '\n</td>\n</tr>\n';
 }
 
-function generateTable(parsedCode) {
-    let rowsList = [];
-    pushToTable(rowsList, 'Line', 'Type', 'Name', 'Condition', 'Value');
-    parsedCodeToTable(parsedCode, rowsList);
-    return rowsList.reduce((str, row) => str + generateRow(row), '');
+function generateSubtitutedCode(parsedCode) {
+    let env = [];
+    substituteParsedCode(parsedCode, env);
+    return escodegen.generate(parsedCode);
 }
 
-export {generateTable, parsedCodeToTable};
+export {generateSubtitutedCode, substituteParsedCode};
 
