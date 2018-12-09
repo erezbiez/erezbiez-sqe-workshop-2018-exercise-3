@@ -29,7 +29,7 @@
         </td>
         <td>
             <div>
-                <label>Parsed code here</label>
+                <label>Substituted colored code here</label>
             </div>
         </td>
     </tr>
@@ -38,10 +38,12 @@
             <div class="textAreaWrapper">
                 <textarea id="codePlaceholder" title="Enter code here"></textarea>
             </div>
+            <div class="parameters">
+                <textarea id="parametersPlaceholder" title="Enter parameters here"></textarea>
+            </div>
         </td>
         <td>
-            <div class="textAreaWrapper">
-                <textarea id="parsedCode" title="Parse code"></textarea>
+            <div id="substitutedCodeArea">
             </div>
         </td>
     </tr>
@@ -52,14 +54,6 @@
             </div>
         </td>
         <td>
-        </td>
-    </tr>
-    <tr>
-        <td colspan="2">
-            <div>
-                <table id="viewTable">
-                </table>
-            </div>
         </td>
     </tr>
 </table>

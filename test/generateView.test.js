@@ -1,6 +1,6 @@
 import assert from 'assert';
 import {parseCode} from '../src/js/code-analyzer';
-import {substituteParsedCode} from '../src/js/generateView';
+import {substituteParsedCode} from '../src/js/substitutioner';
 
 describe('The generate view module', () => {
     it('is parsing assignment expression statement correctly', () => {
