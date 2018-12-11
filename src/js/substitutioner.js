@@ -146,8 +146,8 @@ function generateSubstitutedCode(parsedCode, params, colors) {
 
 function generateRow(row, i, colors) {
     let color = 'black';
-    if (colors.red.includes(i)) color = 'red'
-    if (colors.green.includes(i)) color = 'green'
+    if (colors.red.includes(i)) color = 'red';
+    if (colors.green.includes(i)) color = 'green';
     return '<span style="white-space: pre; color: ' + color + ';">'+ row + '</span><br>';
 }
 
