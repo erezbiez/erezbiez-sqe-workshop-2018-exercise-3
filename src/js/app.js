@@ -2,7 +2,6 @@ import $ from 'jquery';
 import {parseCode} from './code-analyzer';
 import {evaluateParams, generateSubstitutedCode, generateRow} from './substitutioner';
 
-
 $(document).ready(function () {
     $('#codeSubmissionButton').click(() => {
         let codeToParse = $('#codePlaceholder').val();

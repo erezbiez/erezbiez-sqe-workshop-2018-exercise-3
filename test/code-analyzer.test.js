@@ -6,7 +6,7 @@ describe('The javascript parser', () => {
         assert.equal(
             JSON.stringify(parseCode('')),
             JSON.stringify(JSON.parse(
-            '{\n' +
+                '{\n' +
             '  "type": "Program",\n' +
             '  "body": [],\n' +
             '  "sourceType": "script",\n' +
@@ -28,7 +28,7 @@ describe('The javascript parser', () => {
         assert.equal(
             JSON.stringify(parseCode('let a = 1;')),
             JSON.stringify(JSON.parse(
-            '{\n' +
+                '{\n' +
                 '  "type": "Program",\n' +
                 '  "body": [\n' +
                 '    {\n' +
