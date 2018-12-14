@@ -17,7 +17,7 @@ $(document).ready(function () {
         let evaluatedCode = generateSubstitutedCode(substitutedParseCode, initParams, colors);
         let substitutedCodeArea = document.getElementById('substitutedCodeArea');
         substitutedCodeArea.innerHTML = '';
-        substitutedCode.split('\n').forEach((r,i) => substitutedCodeArea.innerHTML += generateRow(r, i, colors));
+        substitutedCode.split('\n').forEach((r,i) => substitutedCodeArea.innerHTML += generateRow(r, i+1, colors));
         $('#parsedCode').val(JSON.stringify(evaluatedCode, null, 2));
     });
 });
