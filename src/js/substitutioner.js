@@ -14,6 +14,7 @@ const handlers = {
 };
 
 const atomicHandlers = {
+    'ArrayExpression': arrayExpression,
     'BinaryExpression': binaryExpression,
     'Identifier': identifier,
     'Literal': literal,
@@ -27,9 +28,21 @@ function substituteParsedCode(exp, env, params, colors) {
     return false;
 }
 
+function arrayExpression(exp, env, params) {
+    return exp;
+}
+
 function assignmentExpression(exp, env, params, colors) {
-    env[exp.left.name] = atomicHandlers[exp.right.type](exp.right, env);
-    return !(params.includes(exp.left.name));
+    if (exp.left.type === 'MemberExpression') {
+        if (env[exp.left.object.name].type !== 'Identifier'){
+            env[exp.left.object.name].elements[exp.left.property.value] = atomicHandlers[exp.right.type](exp.right, env);
+        }
+        return !(params.includes(exp.left.object.name));
+    }
+    else {
+        env[exp.left.name] = atomicHandlers[exp.right.type](exp.right, env);
+        return !(params.includes(exp.left.name));
+    }
 }
 
 function binaryExpression(exp, env) {
@@ -66,7 +79,11 @@ function param(param, env, params) {
 }
 
 function paramWithValue(param, value, env) {
-    env[param.name] = value;
+    if (param.type === 'ArrayExpression')
+        env[param.object.name] = value;
+    else {
+        env[param.name] = value;
+    }
 }
 
 function functionDeclaration(exp, env, params, colors) {
@@ -88,12 +105,13 @@ function ifStatement(exp, env, params, colors) {
         else colors['red'].push(exp.loc.start.line);
     }
     substituteParsedCode(exp.consequent, env, params, colors);
-    if (exp.alternate !== null)
+    if (exp.alternate !== null) {
         if (exp.test.type === 'Literal' && exp.alternate.type === 'BlockStatement') {
             if (exp.test.value) colors['red'].push(exp.alternate.loc.start.line);
             else colors['green'].push(exp.alternate.loc.start.line);
         }
-    substituteParsedCode(exp.alternate, env, params, colors);
+        substituteParsedCode(exp.alternate, env, params, colors);
+    }
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -102,9 +120,13 @@ function literal(exp, env) {
 }
 
 function memberExpression(exp, env) {
-    exp.object = atomicHandlers[exp.object.type](exp.object, env);
-    exp.propery = atomicHandlers[exp.property.type](exp.property, env);
-    return exp;
+    let arr = env[exp.object.name];
+    let property = exp.property.value;
+    if (arr.type === 'Identifier') {
+        return exp;
+    } else {
+        return arr.elements[property];
+    }
 }
 
 function returnStatement(exp, env, params, colors) {
@@ -132,10 +154,19 @@ function whileStatement(exp, env, params, colors) {
 }
 
 function evaluateParams(parsedCode) {
-    let res = [];
-    if (parsedCode.body.length !== 0)
-        res = parsedCode.body[0].expression.expressions;
-    return res;
+    let params;
+    if (parsedCode.body.length !== 0) {
+        params = parsedCode.body[0].expression;
+        if (params.type === 'SequenceExpression')
+            return params.expressions;
+        else {
+            let arr = [];
+            arr.push(params);
+            return arr;
+        }
+    } else {
+        return [];
+    }
 }
 
 function generateSubstitutedCode(parsedCode, params, colors) {

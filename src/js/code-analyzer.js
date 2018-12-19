@@ -4,4 +4,9 @@ const parseCode = (codeToParse) => {
     return esprima.parseScript(codeToParse,{loc:true});
 };
 
-export {parseCode};
+const parseCodeNoLoc = (codeToParse) => {
+    return esprima.parseScript(codeToParse);
+};
+
+
+export {parseCode, parseCodeNoLoc};

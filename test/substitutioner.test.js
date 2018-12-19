@@ -1,6 +1,6 @@
 /* eslint-disable max-lines-per-function */
 import assert from 'assert';
-import {parseCode} from '../src/js/code-analyzer';
+import {parseCode, parseCodeNoLoc} from '../src/js/code-analyzer';
 import {evaluateParams, generateSubstitutedCode} from '../src/js/substitutioner';
 
 describe('The substitution module', () => {
@@ -69,6 +69,19 @@ describe('The substitution module', () => {
             '}'), [], colors);
         assert.equal(actualSubstitutedCode,expectedSubstitutedCode);
     });
+    it('member statement on the right of assignment expression -  correctly', () => {
+        let colors = {'red': [], 'green': []};
+        let actualSubstitutedCode = generateSubstitutedCode(parseCode('function foo(x, y, z){\n' +
+            '    x[0] = 1;\n' +
+            '    return y;\n' +
+            '}\n'), [], colors);
+        let expectedSubstitutedCode = generateSubstitutedCode(parseCode(
+            ' function foo(x, y, z) {\n' +
+            '    x[0] = 1;\n' +
+            '    return y;\n' +
+            '}'), [], colors);
+        assert.equal(actualSubstitutedCode,expectedSubstitutedCode);
+    });
     it('colors if + if else test correctly', () => {
         let actualColors = {'red': [], 'green': []};
         let actualSubstitutedCode = generateSubstitutedCode(parseCode(generateSubstitutedCode(parseCode('function foo(x, y, z){\n' +
@@ -131,6 +144,56 @@ describe('The substitution module', () => {
             '}\n'), [], actualColors)), evaluateParams(parseCode('0,0,0')), actualColors);
         let expectedColors = {'red': [2,4], 'green': [6]};
         assert.equal(JSON.stringify(actualColors), JSON.stringify(expectedColors));
+    });
+    it('evaluates no params correctly', () => {
+        let actualParams = evaluateParams(parseCode(''));
+        let expectedParams = [];
+        assert.equal(actualParams.length,expectedParams.length);
+    });
+    it('evaluates one param correctly', () => {
+        let actualParams = evaluateParams(parseCodeNoLoc('1'));
+        let expectedParams = [{
+            'type': 'Literal',
+            'value': 1,
+            'raw': '1'
+        }];
+        assert.equal(actualParams.length,expectedParams.length);
+    });
+    it('evaluates few params correctly', () => {
+        let actualParams = evaluateParams(parseCodeNoLoc('1, true, "hello", [1,2]'));
+        let expectedParams = [
+            {
+                'type': 'Literal',
+                'value': 1,
+                'raw': '1'
+            },
+            {
+                'type': 'Literal',
+                'value': true,
+                'raw': 'true'
+            },
+            {
+                'type': 'Literal',
+                'value': 'hello',
+                'raw': '"hello"'
+            },
+            {
+                'type': 'ArrayExpression',
+                'elements': [
+                    {
+                        'type': 'Literal',
+                        'value': 1,
+                        'raw': '1'
+                    },
+                    {
+                        'type': 'Literal',
+                        'value': 2,
+                        'raw': '2'
+                    }
+                ]
+            }
+        ];
+        assert.equal(actualParams.length,expectedParams.length);
     });
 
 });
