@@ -1,12 +1,12 @@
 /* eslint-disable max-lines-per-function */
 import assert from 'assert';
 import {parseCode, parseCodeNoLoc} from '../src/js/code-analyzer';
-import {evaluateParams, generateSubstitutedCode} from '../src/js/substitutioner';
+import {evaluateParams, generateGraph} from '../src/js/graph-generator';
 
 describe('The substitution module', () => {
     it('generate if statements substituted code correctly', () => {
         let colors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateSubstitutedCode(parseCode('function foo(x, y, z){\n' +
+        let actualSubstitutedCode = generateGraph(parseCode('function foo(x, y, z){\n' +
             '    let a = x + 1;\n' +
             '    let b = a + y;\n' +
             '    let c = 0;\n' +
@@ -22,7 +22,7 @@ describe('The substitution module', () => {
             '        return x + y + z + c;\n' +
             '    }\n' +
             '}\n'), [], colors);
-        let expectedSubstitutedCode = generateSubstitutedCode(parseCode(
+        let expectedSubstitutedCode = generateGraph(parseCode(
             ' function foo(x, y, z) {\n' +
             '    if (x + 1 + y < z) {\n' +
             '        return x + y + z + 5;\n' +
@@ -36,7 +36,7 @@ describe('The substitution module', () => {
     });
     it('generate while statements substituted code correctly', () => {
         let colors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateSubstitutedCode(parseCode('function foo(x, y, z){\n' +
+        let actualSubstitutedCode = generateGraph(parseCode('function foo(x, y, z){\n' +
             '    let a = x + 1;\n' +
             '    let b = a + y;\n' +
             '    let c = 0;\n' +
@@ -48,7 +48,7 @@ describe('The substitution module', () => {
             '    \n' +
             '    return z;\n' +
             '}\n'), [], colors);
-        let expectedSubstitutedCode = generateSubstitutedCode(parseCode('function foo(x, y, z){\n' +
+        let expectedSubstitutedCode = generateGraph(parseCode('function foo(x, y, z){\n' +
             '    while (x + 1 < z) {\n' +
             '        z = (x + 1 + (x + 1 + y)) * 2;\n' +
             '    }\n' +
@@ -59,11 +59,11 @@ describe('The substitution module', () => {
     });
     it('generate member statements substituted code correctly', () => {
         let colors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateSubstitutedCode(parseCode('function foo(x, y, z){\n' +
+        let actualSubstitutedCode = generateGraph(parseCode('function foo(x, y, z){\n' +
             '    let a = x[0];\n' +
             '    return a;\n' +
             '}\n'), [], colors);
-        let expectedSubstitutedCode = generateSubstitutedCode(parseCode(
+        let expectedSubstitutedCode = generateGraph(parseCode(
             ' function foo(x, y, z) {\n' +
             '    return x[0];\n' +
             '}'), [], colors);
@@ -71,11 +71,11 @@ describe('The substitution module', () => {
     });
     it('member statement on the right of assignment expression -  correctly', () => {
         let colors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateSubstitutedCode(parseCode('function foo(x, y, z){\n' +
+        let actualSubstitutedCode = generateGraph(parseCode('function foo(x, y, z){\n' +
             '    x[0] = 1;\n' +
             '    return y;\n' +
             '}\n'), [], colors);
-        let expectedSubstitutedCode = generateSubstitutedCode(parseCode(
+        let expectedSubstitutedCode = generateGraph(parseCode(
             ' function foo(x, y, z) {\n' +
             '    x[0] = 1;\n' +
             '    return y;\n' +
@@ -84,7 +84,7 @@ describe('The substitution module', () => {
     });
     it('colors if + if else test correctly', () => {
         let actualColors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateSubstitutedCode(parseCode(generateSubstitutedCode(parseCode('function foo(x, y, z){\n' +
+        let actualSubstitutedCode = generateGraph(parseCode(generateGraph(parseCode('function foo(x, y, z){\n' +
             '    let a = x + 1;\n' +
             '    let b = a + y;\n' +
             '    let c = 0;\n' +
@@ -105,7 +105,7 @@ describe('The substitution module', () => {
     });
     it('colors else if test correctly', () => {
         let actualColors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateSubstitutedCode(parseCode(generateSubstitutedCode(parseCode('function foo(x, y, z){\n' +
+        let actualSubstitutedCode = generateGraph(parseCode(generateGraph(parseCode('function foo(x, y, z){\n' +
             '    let a = x + 1;\n' +
             '    let b = a + y;\n' +
             '    let c = 0;\n' +
@@ -126,7 +126,7 @@ describe('The substitution module', () => {
     });
     it('colors else test correctly', () => {
         let actualColors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateSubstitutedCode(parseCode(generateSubstitutedCode(parseCode('function foo(x, y, z){\n' +
+        let actualSubstitutedCode = generateGraph(parseCode(generateGraph(parseCode('function foo(x, y, z){\n' +
             '    let a = x + 1;\n' +
             '    let b = a + y;\n' +
             '    let c = 0;\n' +

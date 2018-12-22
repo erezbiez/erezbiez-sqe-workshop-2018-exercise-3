@@ -1,12 +1,7 @@
 import * as esprima from 'esprima';
 
 const parseCode = (codeToParse) => {
-    return esprima.parseScript(codeToParse,{loc:true});
+    return esprima.parseScript(codeToParse, {range:true});
 };
 
-const parseCodeNoLoc = (codeToParse) => {
-    return esprima.parseScript(codeToParse);
-};
-
-
-export {parseCode, parseCodeNoLoc};
+export {parseCode};

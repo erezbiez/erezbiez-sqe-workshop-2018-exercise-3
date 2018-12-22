@@ -1,23 +1,26 @@
 import $ from 'jquery';
 import {parseCode} from './code-analyzer';
-import {evaluateParams, generateSubstitutedCode, generateRow} from './substitutioner';
+import {generateGraph, evaluateParams} from './graph-generator';
+
+import Viz from 'viz.js';
+import {Module, render} from 'viz.js/full.render.js';
 
 $(document).ready(function () {
-    $('#codeSubmissionButton').click(() => {
+    $('#graphCreatorButton').click(() => {
         let codeToParse = $('#codePlaceholder').val();
         let parsedCode = parseCode(codeToParse);
-        let colors = {'red': [], 'green': []};
-        let substitutedCode = generateSubstitutedCode(parsedCode, [], colors);
-        let substitutedParseCode = parseCode(substitutedCode);
-
         let parametersToParse = $('#parametersPlaceholder').val();
         let parsedParameters = parseCode(parametersToParse);
         let initParams = evaluateParams(parsedParameters);
-        colors = {'red': [], 'green': []};
-        let evaluatedCode = generateSubstitutedCode(substitutedParseCode, initParams, colors);
-        let substitutedCodeArea = document.getElementById('substitutedCodeArea');
-        substitutedCodeArea.innerHTML = '';
-        substitutedCode.split('\n').forEach((r,i) => substitutedCodeArea.innerHTML += generateRow(r, i+1, colors));
-        $('#parsedCode').val(JSON.stringify(evaluatedCode, null, 2));
+
+        let dotGraph = generateGraph(parsedCode, initParams);
+
+        let viz = new Viz({ Module, render });
+        viz.renderSVGElement(dotGraph)
+            .then(function(element) {
+                let graphArea = document.getElementById('graphArea');
+                graphArea.innerHTML = '';
+                graphArea.append(element);
+            });
     });
 });
