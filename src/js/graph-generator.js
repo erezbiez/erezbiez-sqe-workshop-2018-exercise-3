@@ -26,12 +26,12 @@ function evaluateCode(exp, env) {
 }
 
 function arrayExpression(exp, env) {
-    return eval('[' + exp.elements.map(ex => atomicHandlers[exp.type](exp, env)).join(',') + ']');
+    return eval('[' + exp.elements.map(ex => atomicHandlers[ex.type](ex, env)).join(',') + ']');
 }
 
 function assignmentExpression(exp, env) {
     if (exp.left.type === 'MemberExpression') {
-        env[exp.left.object.name].elements[exp.left.property.value] = atomicHandlers[exp.right.type](exp.right, env);
+        env[exp.left.object.name][exp.left.property.value] = atomicHandlers[exp.right.type](exp.right, env);
     } else {
         env[exp.left.name] = atomicHandlers[exp.right.type](exp.right, env);
     }
@@ -66,7 +66,7 @@ function literal(exp, env) {
 function memberExpression(exp, env) {
     let arr = env[exp.object.name];
     let property = exp.property.value;
-    return eval(arr + '[' + property + ']');
+    return arr[property];
 }
 
 function variableDeclaration(exp, env) {
@@ -90,7 +90,7 @@ function evaluateParams(parsedCode) {
             return params.expressions.map(ex => atomicHandlers[ex.type](ex, env));
         else {
             let arr = [];
-            arr.push(ex => atomicHandlers[ex.type](ex, env));
+            arr.push(atomicHandlers[params.type](params, env));
             return arr;
         }
     } else {
@@ -136,14 +136,14 @@ function createNodes(parsedCode) {
     nodes = nodes.slice(1, nodes.length - 1);
     nodes[0].prev = [];
     nodes.filter(node => node.astNode.type === 'ReturnStatement').forEach(node => {node.next=[]; delete node.normal;});
-    nodes.forEach(node => node.label = escodegen.generate(node.astNode));
+    nodes.forEach(node => node.label = escodegen.generate(node.astNode).replace(new RegExp('\\n', 'g'),'').replace(new RegExp(' {2}', 'g'),''));
     for (let i = 0; i < nodes.length; i++) {
         let currNode = nodes[i];
         if (currNode.normal && currNode.normal.normal && currNode.normal.next.length !== 0) {
             nodes.splice(nodes.indexOf(currNode.normal), 1);
-            currNode.label = currNode.label + '\n' + currNode.normal.label;
-            currNode.normal = currNode.normal.normal;
+            currNode.label = `${currNode.label} \n ${currNode.normal.label}`;
             currNode.next = currNode.normal.next;
+            currNode.normal = currNode.normal.normal;
             i--;
         }
     }

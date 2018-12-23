@@ -1,42 +1,145 @@
 /* eslint-disable max-lines-per-function */
 import assert from 'assert';
-import {parseCode, parseCodeNoLoc} from '../src/js/code-analyzer';
+import {parseCode} from '../src/js/code-analyzer';
 import {evaluateParams, generateGraph} from '../src/js/graph-generator';
 
-describe('The substitution module', () => {
-    it('generate if statements substituted code correctly', () => {
-        let colors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateGraph(parseCode('function foo(x, y, z){\n' +
+describe('The graph generator module', () => {
+    it('generate if statements graph correctly - if', () => {
+        let initParams = evaluateParams(parseCode('0, 0, 0'));
+        let actualGrpah = generateGraph(parseCode('function foo(x, y, z){\n' +
             '    let a = x + 1;\n' +
             '    let b = a + y;\n' +
             '    let c = 0;\n' +
             '    \n' +
             '    if (b < z) {\n' +
             '        c = c + 5;\n' +
-            '        return x + y + z + c;\n' +
             '    } else if (b < z * 2) {\n' +
             '        c = c + x + 5;\n' +
-            '        return x + y + z + c;\n' +
             '    } else {\n' +
             '        c = c + z + 5;\n' +
-            '        return x + y + z + c;\n' +
             '    }\n' +
-            '}\n'), [], colors);
-        let expectedSubstitutedCode = generateGraph(parseCode(
-            ' function foo(x, y, z) {\n' +
-            '    if (x + 1 + y < z) {\n' +
-            '        return x + y + z + 5;\n' +
-            '    } else if (x + 1 + y < z * 2) {\n' +
-            '        return x + y + z + (x + 5);\n' +
-            '    } else {\n' +
-            '        return x + y + z + (z + 5);\n' +
-            '    }\n' +
-            '}'), [], colors);
-        assert.equal(actualSubstitutedCode,expectedSubstitutedCode);
+            '    \n' +
+            '    return c;\n' +
+            '}\n'), initParams);
+        let expectedGraph = 'digraph cfg { forcelabels=true n0 [label="let a = x + 1; \n' +
+            ' let b = a + y; \n' +
+            ' let c = 0;", xlabel = 1,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n1 [label="b < z", xlabel = 2,  shape=diamond, style = filled, fillcolor = green]\n' +
+            'n2 [label="c = c + 5", xlabel = 3,  shape=rectangle,]\n' +
+            'n3 [label="return c;", xlabel = 4,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n4 [label="b < z * 2", xlabel = 5,  shape=diamond, style = filled, fillcolor = green]\n' +
+            'n5 [label="c = c + x + 5", xlabel = 6,  shape=rectangle,]\n' +
+            'n6 [label="c = c + z + 5", xlabel = 7,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n0 -> n1 []\n' +
+            'n1 -> n2 [label="T"]\n' +
+            'n1 -> n4 [label="F"]\n' +
+            'n2 -> n3 []\n' +
+            'n4 -> n5 [label="T"]\n' +
+            'n4 -> n6 [label="F"]\n' +
+            'n5 -> n3 []\n' +
+            'n6 -> n3 []\n' +
+            ' }';
+        assert.equal(actualGrpah, expectedGraph);
     });
-    it('generate while statements substituted code correctly', () => {
-        let colors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateGraph(parseCode('function foo(x, y, z){\n' +
+    it('generate if statements graph correctly - if else', () => {
+        let initParams = evaluateParams(parseCode('1, 2, 3'));
+        let actualGrpah = generateGraph(parseCode('function foo(x, y, z){\n' +
+            '    let a = x + 1;\n' +
+            '    let b = a + y;\n' +
+            '    let c = 0;\n' +
+            '    \n' +
+            '    if (b < z) {\n' +
+            '        c = c + 5;\n' +
+            '    } else if (b < z * 2) {\n' +
+            '        c = c + x + 5;\n' +
+            '    } else {\n' +
+            '        c = c + z + 5;\n' +
+            '    }\n' +
+            '    \n' +
+            '    return c;\n' +
+            '}\n'), initParams);
+        let expectedGraph = 'digraph cfg { forcelabels=true n0 [label="let a = x + 1; \n' +
+            ' let b = a + y; \n' +
+            ' let c = 0;", xlabel = 1,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n1 [label="b < z", xlabel = 2,  shape=diamond, style = filled, fillcolor = green]\n' +
+            'n2 [label="c = c + 5", xlabel = 3,  shape=rectangle,]\n' +
+            'n3 [label="return c;", xlabel = 4,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n4 [label="b < z * 2", xlabel = 5,  shape=diamond, style = filled, fillcolor = green]\n' +
+            'n5 [label="c = c + x + 5", xlabel = 6,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n6 [label="c = c + z + 5", xlabel = 7,  shape=rectangle,]\n' +
+            'n0 -> n1 []\n' +
+            'n1 -> n2 [label="T"]\n' +
+            'n1 -> n4 [label="F"]\n' +
+            'n2 -> n3 []\n' +
+            'n4 -> n5 [label="T"]\n' +
+            'n4 -> n6 [label="F"]\n' +
+            'n5 -> n3 []\n' +
+            'n6 -> n3 []\n' +
+            ' }';
+        assert.equal(actualGrpah, expectedGraph);
+    });
+    it('generate if statements graph correctly - else', () => {
+        let initParams = evaluateParams(parseCode('0, 0, 3'));
+        let actualGrpah = generateGraph(parseCode('function foo(x, y, z){\n' +
+            '    let a = x + 1;\n' +
+            '    let b = a + y;\n' +
+            '    let c = 0;\n' +
+            '    \n' +
+            '    if (b < z) {\n' +
+            '        c = c + 5;\n' +
+            '    } else if (b < z * 2) {\n' +
+            '        c = c + x + 5;\n' +
+            '    } else {\n' +
+            '        c = c + z + 5;\n' +
+            '    }\n' +
+            '    \n' +
+            '    return c;\n' +
+            '}\n'), initParams);
+        let expectedGraph = 'digraph cfg { forcelabels=true n0 [label="let a = x + 1; \n' +
+            ' let b = a + y; \n' +
+            ' let c = 0;", xlabel = 1,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n1 [label="b < z", xlabel = 2,  shape=diamond, style = filled, fillcolor = green]\n' +
+            'n2 [label="c = c + 5", xlabel = 3,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n3 [label="return c;", xlabel = 4,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n4 [label="b < z * 2", xlabel = 5,  shape=diamond,]\n' +
+            'n5 [label="c = c + x + 5", xlabel = 6,  shape=rectangle,]\n' +
+            'n6 [label="c = c + z + 5", xlabel = 7,  shape=rectangle,]\n' +
+            'n0 -> n1 []\n' +
+            'n1 -> n2 [label="T"]\n' +
+            'n1 -> n4 [label="F"]\n' +
+            'n2 -> n3 []\n' +
+            'n4 -> n5 [label="T"]\n' +
+            'n4 -> n6 [label="F"]\n' +
+            'n5 -> n3 []\n' +
+            'n6 -> n3 []\n' +
+            ' }';
+        assert.equal(actualGrpah, expectedGraph);
+    });
+    it('generate if statements graph correctly + arrays', () => {
+        let initParams = evaluateParams(parseCode(''));
+        let actualGrpah = generateGraph(parseCode('function foo(){\n' +
+            '    let a = [1,2];\n' +
+            '    let b = a[0];\n' +
+            '    if (b==1){\n' +
+            '       a[1]=3;\n' +
+            '    }\n' +
+            '    return b;\n' +
+            '}\n'), initParams);
+        let expectedGraph = 'digraph cfg { forcelabels=true n0 [label="let a = [1,2]; \n' +
+            ' let b = a[0];", xlabel = 1,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n1 [label="b == 1", xlabel = 2,  shape=diamond, style = filled, fillcolor = green]\n' +
+            'n2 [label="a[1] = 3", xlabel = 3,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n3 [label="return b;", xlabel = 4,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n0 -> n1 []\n' +
+            'n1 -> n2 [label="T"]\n' +
+            'n1 -> n3 [label="F"]\n' +
+            'n2 -> n3 []\n' +
+            ' }';
+        assert.equal(actualGrpah, expectedGraph);
+    });
+    it('generate while statements graph correctly - 1', () => {
+        let initParams = evaluateParams(parseCode('0,0,0'));
+        let actualGrpah = generateGraph(parseCode('function foo(x, y, z){\n' +
             '    let a = x + 1;\n' +
             '    let b = a + y;\n' +
             '    let c = 0;\n' +
@@ -47,103 +150,78 @@ describe('The substitution module', () => {
             '    }\n' +
             '    \n' +
             '    return z;\n' +
-            '}\n'), [], colors);
-        let expectedSubstitutedCode = generateGraph(parseCode('function foo(x, y, z){\n' +
-            '    while (x + 1 < z) {\n' +
-            '        z = (x + 1 + (x + 1 + y)) * 2;\n' +
+            '}\n'), initParams);
+        let expectedGraph = 'digraph cfg { forcelabels=true n0 [label="let a = x + 1; \n' +
+            ' let b = a + y; \n' +
+            ' let c = 0;", xlabel = 1,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n1 [label="a < z", xlabel = 2,  shape=diamond, style = filled, fillcolor = green]\n' +
+            'n2 [label="c = a + b \n' +
+            ' z = c * 2", xlabel = 3,  shape=rectangle,]\n' +
+            'n3 [label="return z;", xlabel = 4,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n0 -> n1 []\n' +
+            'n1 -> n2 [label="T"]\n' +
+            'n1 -> n3 [label="F"]\n' +
+            'n2 -> n1 []\n' +
+            ' }';
+        assert.equal(actualGrpah, expectedGraph);
+    });
+    it('generate while statements graph correctly - 2', () => {
+        let initParams = evaluateParams(parseCode('0,0,10'));
+        let actualGrpah = generateGraph(parseCode('function foo(x, y, z){\n' +
+            '    let a = x + 1;\n' +
+            '    let b = a + y;\n' +
+            '    let c = 0;\n' +
+            '    \n' +
+            '    while (a < z) {\n' +
+            '        a = a+1;\n' +
             '    }\n' +
             '    \n' +
             '    return z;\n' +
-            '}\n'), [], colors);
-        assert.equal(actualSubstitutedCode,expectedSubstitutedCode);
+            '}\n'), initParams);
+        let expectedGraph = 'digraph cfg { forcelabels=true n0 [label="let a = x + 1; \n' +
+            ' let b = a + y; \n' +
+            ' let c = 0;", xlabel = 1,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n1 [label="a < z", xlabel = 2,  shape=diamond, style = filled, fillcolor = green]\n' +
+            'n2 [label="a = a + 1", xlabel = 3,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n3 [label="return z;", xlabel = 4,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n0 -> n1 []\n' +
+            'n1 -> n2 [label="T"]\n' +
+            'n1 -> n3 [label="F"]\n' +
+            'n2 -> n1 []\n' +
+            ' }';
+        assert.equal(actualGrpah, expectedGraph);
     });
-    it('generate member statements substituted code correctly', () => {
-        let colors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateGraph(parseCode('function foo(x, y, z){\n' +
-            '    let a = x[0];\n' +
+    it('generate while + if statements graph correctly', () => {
+        let initParams = evaluateParams(parseCode('1'));
+        let actualGrpah = generateGraph(parseCode('function foo(x){\n' +
+            '    let a = x + 1;\n' +
+            '    \n' +
+            '    while (x < a) {\n' +
+            '        if (x==1){ \n' +
+            '            x = a;\n' +
+            '        }\n' +
+            '        else {\n' +
+            '            x = x+1;\n' +
+            '        }\n' +
+            '    }\n' +
+            '    \n' +
             '    return a;\n' +
-            '}\n'), [], colors);
-        let expectedSubstitutedCode = generateGraph(parseCode(
-            ' function foo(x, y, z) {\n' +
-            '    return x[0];\n' +
-            '}'), [], colors);
-        assert.equal(actualSubstitutedCode,expectedSubstitutedCode);
-    });
-    it('member statement on the right of assignment expression -  correctly', () => {
-        let colors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateGraph(parseCode('function foo(x, y, z){\n' +
-            '    x[0] = 1;\n' +
-            '    return y;\n' +
-            '}\n'), [], colors);
-        let expectedSubstitutedCode = generateGraph(parseCode(
-            ' function foo(x, y, z) {\n' +
-            '    x[0] = 1;\n' +
-            '    return y;\n' +
-            '}'), [], colors);
-        assert.equal(actualSubstitutedCode,expectedSubstitutedCode);
-    });
-    it('colors if + if else test correctly', () => {
-        let actualColors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateGraph(parseCode(generateGraph(parseCode('function foo(x, y, z){\n' +
-            '    let a = x + 1;\n' +
-            '    let b = a + y;\n' +
-            '    let c = 0;\n' +
-            '    \n' +
-            '    if (b < z) {\n' +
-            '        c = c + 5;\n' +
-            '        return x + y + z + c;\n' +
-            '    } else if (b < z * 2) {\n' +
-            '        c = c + x + 5;\n' +
-            '        return x + y + z + c;\n' +
-            '    } else {\n' +
-            '        c = c + z + 5;\n' +
-            '        return x + y + z + c;\n' +
-            '    }\n' +
-            '}\n'), [], actualColors)), evaluateParams(parseCode('0,0,10')), actualColors);
-        let expectedColors = {'red': [6], 'green': [2,4]};
-        assert.equal(JSON.stringify(actualColors), JSON.stringify(expectedColors));
-    });
-    it('colors else if test correctly', () => {
-        let actualColors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateGraph(parseCode(generateGraph(parseCode('function foo(x, y, z){\n' +
-            '    let a = x + 1;\n' +
-            '    let b = a + y;\n' +
-            '    let c = 0;\n' +
-            '    \n' +
-            '    if (b < z) {\n' +
-            '        c = c + 5;\n' +
-            '        return x + y + z + c;\n' +
-            '    } else if (b < z * 2) {\n' +
-            '        c = c + x + 5;\n' +
-            '        return x + y + z + c;\n' +
-            '    } else {\n' +
-            '        c = c + z + 5;\n' +
-            '        return x + y + z + c;\n' +
-            '    }\n' +
-            '}\n'), [], actualColors)), evaluateParams(parseCode('1,1,2')), actualColors);
-        let expectedColors = {'red': [2,6], 'green': [4]};
-        assert.equal(JSON.stringify(actualColors), JSON.stringify(expectedColors));
-    });
-    it('colors else test correctly', () => {
-        let actualColors = {'red': [], 'green': []};
-        let actualSubstitutedCode = generateGraph(parseCode(generateGraph(parseCode('function foo(x, y, z){\n' +
-            '    let a = x + 1;\n' +
-            '    let b = a + y;\n' +
-            '    let c = 0;\n' +
-            '    \n' +
-            '    if (b < z) {\n' +
-            '        c = c + 5;\n' +
-            '        return x + y + z + c;\n' +
-            '    } else if (b < z * 2) {\n' +
-            '        c = c + x + 5;\n' +
-            '        return x + y + z + c;\n' +
-            '    } else {\n' +
-            '        c = c + z + 5;\n' +
-            '        return x + y + z + c;\n' +
-            '    }\n' +
-            '}\n'), [], actualColors)), evaluateParams(parseCode('0,0,0')), actualColors);
-        let expectedColors = {'red': [2,4], 'green': [6]};
-        assert.equal(JSON.stringify(actualColors), JSON.stringify(expectedColors));
+            '}\n'), initParams);
+        let expectedGraph = 'digraph cfg { forcelabels=true n0 [label="let a = x + 1;", xlabel = 1,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n1 [label="x < a", xlabel = 2,  shape=diamond, style = filled, fillcolor = green]\n' +
+            'n2 [label="x == 1", xlabel = 3,  shape=diamond, style = filled, fillcolor = green]\n' +
+            'n3 [label="x = a", xlabel = 4,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n4 [label="x = x + 1", xlabel = 5,  shape=rectangle,]\n' +
+            'n5 [label="return a;", xlabel = 6,  shape=rectangle, style = filled, fillcolor = green]\n' +
+            'n0 -> n1 []\n' +
+            'n1 -> n2 [label="T"]\n' +
+            'n1 -> n5 [label="F"]\n' +
+            'n2 -> n3 [label="T"]\n' +
+            'n2 -> n4 [label="F"]\n' +
+            'n3 -> n1 []\n' +
+            'n4 -> n1 []\n' +
+            ' }';
+        assert.equal(actualGrpah, expectedGraph);
     });
     it('evaluates no params correctly', () => {
         let actualParams = evaluateParams(parseCode(''));
@@ -151,49 +229,14 @@ describe('The substitution module', () => {
         assert.equal(actualParams.length,expectedParams.length);
     });
     it('evaluates one param correctly', () => {
-        let actualParams = evaluateParams(parseCodeNoLoc('1'));
-        let expectedParams = [{
-            'type': 'Literal',
-            'value': 1,
-            'raw': '1'
-        }];
+        let actualParams = evaluateParams(parseCode('1'));
+        let expectedParams = [1];
         assert.equal(actualParams.length,expectedParams.length);
     });
     it('evaluates few params correctly', () => {
-        let actualParams = evaluateParams(parseCodeNoLoc('1, true, "hello", [1,2]'));
-        let expectedParams = [
-            {
-                'type': 'Literal',
-                'value': 1,
-                'raw': '1'
-            },
-            {
-                'type': 'Literal',
-                'value': true,
-                'raw': 'true'
-            },
-            {
-                'type': 'Literal',
-                'value': 'hello',
-                'raw': '"hello"'
-            },
-            {
-                'type': 'ArrayExpression',
-                'elements': [
-                    {
-                        'type': 'Literal',
-                        'value': 1,
-                        'raw': '1'
-                    },
-                    {
-                        'type': 'Literal',
-                        'value': 2,
-                        'raw': '2'
-                    }
-                ]
-            }
-        ];
-        assert.equal(actualParams.length,expectedParams.length);
+        let actualParams = evaluateParams(parseCode('1, true, "hello", [1,2]'));
+        let expectedParams = [1, true, 'hello', [1,2]];
+        assert.equal(actualParams.length, expectedParams.length);
     });
 
 });
